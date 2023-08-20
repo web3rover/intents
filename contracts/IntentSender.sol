@@ -41,7 +41,7 @@ contract IntentSender {
         uint256 _sourcePoolId,
         address _sourceTokenAddress,
         address _router
-    ) {
+    ) payable {
         sourceChainId = _sourceChainId;
         sourcePoolId = _sourcePoolId;
         sourceTokenAddress = _sourceTokenAddress;
@@ -62,6 +62,7 @@ contract IntentSender {
         _approveAssetForTransfer(_sourceToken, _amount);
 
         uint256 fee = getCrossChainTransferFee(_destinationChainId, msg.sender);
+
         _transferCrossChain(
             _destinationChainId, 
             sourcePoolId, 
@@ -85,7 +86,7 @@ contract IntentSender {
     function getCrossChainTransferFee(
         uint16 _destinationChainId,
         address _toAddress
-    ) public returns (uint256 fee) {
+    ) view public returns (uint256 fee) {
         IStargateRouter router = IStargateRouter(router);
         (fee, ) = router.quoteLayerZeroFee(
             _destinationChainId,
@@ -104,7 +105,7 @@ contract IntentSender {
         address _toAddress,
         uint256 _fee
     ) internal {
-        uint256 destinationAmountMin = (_amount * minimumAmountInDestination) / MAX_BPS;
+        uint256 destinationAmountMin = 0; // (_amount * minimumAmountInDestination) / MAX_BPS;
 
         IStargateRouter router = IStargateRouter(router);
         router.swap{ value: _fee }(
