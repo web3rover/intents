@@ -7,7 +7,7 @@ async function main() {
   ] = await ethers.getSigners();
 
   // update this variable
-  const intentSenderContractAddress = "0xaF7a8d953D2556ad3D779b0AA9E8dae0E7EaD965";
+  const intentSenderContractAddress = process.env.INTENT_SENDER_CONTRACT_ADDRESS || "";
 
   const maticUSDCContractAddress = "0x742DfA5Aa70a8212857966D491D67B09Ce7D6ec7";
   const usdcMintAmount = "100000000" //100 USDC with 6 decimals
