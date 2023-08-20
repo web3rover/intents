@@ -34,18 +34,26 @@ contract IntentSender {
     address public sourceTokenAddress;
 
     // address of the STG router contract
-    address public router;
+    address public stgRouter;
+
+    ///////////////////////////////////////////////////////
+    /////////////// Uniswap Configuration ////////////////
+    /////////////////////////////////////////////////////
+
+    address public uniswapRouter;
 
     constructor(
         uint16 _sourceChainId,
         uint256 _sourcePoolId,
         address _sourceTokenAddress,
-        address _router
+        address _stgRouter,
+        address _uniswapRouter
     ) payable {
         sourceChainId = _sourceChainId;
         sourcePoolId = _sourcePoolId;
         sourceTokenAddress = _sourceTokenAddress;
-        router = _router;
+        stgRouter = _stgRouter;
+        uniswapRouter = _uniswapRouter;
     }
 
     function setDestination(uint16 _destinationChainId, uint256 _destinationPoolId) external {
@@ -56,10 +64,14 @@ contract IntentSender {
     function sendIntent(uint16 _destinationChainId, address _sourceToken, uint256 _amount) external {
         require(destinationConfigured[_destinationChainId], "Destination not configured");
         require(_amount > 0, "Amount must be greater than 0");
-        require(_sourceToken == sourceTokenAddress, "Token not supported");
 
         _receiveAsset(_sourceToken, _amount);
-        _approveAssetForTransfer(_sourceToken, _amount);
+        uint amount = _amount;
+        if (_sourceToken != sourceTokenAddress) {
+            amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount);
+        }
+        
+        _approveAssetForTransfer(sourceTokenAddress, amount);
 
         uint256 fee = getCrossChainTransferFee(_destinationChainId, msg.sender);
 
@@ -67,10 +79,19 @@ contract IntentSender {
             _destinationChainId, 
             sourcePoolId, 
             destinationPoolId[_destinationChainId], 
-            _amount, 
+            amount, 
             msg.sender, 
             fee
         );
+    }
+
+    //implement pending
+    function _swapTokens(
+        address fromToken,
+        address toToken,
+        address amount
+    ) {
+        return amount;
     }
 
     function _receiveAsset(address _token, uint256 _amount) internal {
@@ -80,14 +101,14 @@ contract IntentSender {
 
     function _approveAssetForTransfer(address _token, uint256 _amount) internal {
         IERC20Upgradeable asset = IERC20Upgradeable(_token);
-        asset.safeApprove(router, _amount);
+        asset.safeApprove(stgRouter, _amount);
     }
 
     function getCrossChainTransferFee(
         uint16 _destinationChainId,
         address _toAddress
     ) view public returns (uint256 fee) {
-        IStargateRouter router = IStargateRouter(router);
+        IStargateRouter router = IStargateRouter(stgRouter);
         (fee, ) = router.quoteLayerZeroFee(
             _destinationChainId,
             1,
@@ -107,7 +128,7 @@ contract IntentSender {
     ) internal {
         uint256 destinationAmountMin = (_amount * minimumAmountInDestination) / MAX_BPS;
 
-        IStargateRouter router = IStargateRouter(router);
+        IStargateRouter router = IStargateRouter(stgRouter);
         router.swap{ value: _fee }(
             _destinationChainId,
             _sourcePoolId,
