@@ -9,9 +9,14 @@ import "./interfaces/IStargateRouter.sol";
 contract IntentSender {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
+    uint256 public constant MAX_BPS = 10000;
+
     ///////////////////////////////////////////////////
     /////////////// STG Configuration ////////////////
     /////////////////////////////////////////////////
+
+    // minimum quantity of tokens to recieve on the destination chain. (99.94% of the amount sent)
+    uint256 public constant minimumAmountInDestination = 9994;
 
     // destinationChainID => true
     mapping (uint16 => bool) public destinationConfigured;
@@ -99,6 +104,8 @@ contract IntentSender {
         address _toAddress,
         uint256 _fee
     ) internal {
+        uint256 destinationAmountMin = (_amount * minimumAmountInDestination) / MAX_BPS;
+
         IStargateRouter router = IStargateRouter(router);
         router.swap{ value: _fee }(
             _destinationChainId,
@@ -106,7 +113,7 @@ contract IntentSender {
             _destinationPoolId,
             payable(address(this)),
             _amount,
-            _amount,
+            destinationAmountMin,
             IStargateRouter.lzTxObj(0, 0, "0x"),
             abi.encodePacked(_toAddress),
             "0x"
