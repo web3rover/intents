@@ -105,7 +105,7 @@ contract IntentSender {
         address _toAddress,
         uint256 _fee
     ) internal {
-        uint256 destinationAmountMin = 0; // (_amount * minimumAmountInDestination) / MAX_BPS;
+        uint256 destinationAmountMin = (_amount * minimumAmountInDestination) / MAX_BPS;
 
         IStargateRouter router = IStargateRouter(router);
         router.swap{ value: _fee }(
@@ -120,4 +120,6 @@ contract IntentSender {
             "0x"
         );
     }
+
+    receive() external payable {}
 }

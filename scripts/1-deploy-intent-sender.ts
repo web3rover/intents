@@ -7,7 +7,7 @@ async function main() {
 
   const maticAmountToDeposit = ethers.parseEther("100").toString()
   const maticChainId = 10109;
-  const maticUSDCPoolId = 0;
+  const maticUSDCPoolId = 1;
   const maticUSDCAddress = "0x742DfA5Aa70a8212857966D491D67B09Ce7D6ec7";
   const maticRouter = "0x817436a076060D158204d955E5403b6Ed0A5fac0";
 
@@ -27,7 +27,7 @@ async function main() {
 
   // set destination chain id
   const arbitrumChainId = 10143;
-  const arbitrumUSDCPoolId = 0;
+  const arbitrumUSDCPoolId = 1;
   await intentSender.setDestination(arbitrumChainId, arbitrumUSDCPoolId);
 
   console.log(`Arbitrum destination chain id set to ${arbitrumChainId}`);
