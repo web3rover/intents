@@ -10,12 +10,14 @@ async function main() {
   const maticUSDCPoolId = 1;
   const maticUSDCAddress = "0x742DfA5Aa70a8212857966D491D67B09Ce7D6ec7";
   const maticRouter = "0x817436a076060D158204d955E5403b6Ed0A5fac0";
+  const uniswapRouter = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
 
   const intentSender = await ethers.deployContract("IntentSender", [
     maticChainId,
     maticUSDCPoolId,
     maticUSDCAddress,
     maticRouter,
+    uniswapRouter
   ], {
     value: maticAmountToDeposit,
     from: deployer.address

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "hardhat/console.sol";
 
 import "./interfaces/IStargateRouter.sol";
+import "./interfaces/IUniswapRouter.sol";
 
 contract IntentSender {
     using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -89,9 +90,17 @@ contract IntentSender {
     function _swapTokens(
         address fromToken,
         address toToken,
-        address amount
-    ) {
-        return amount;
+        uint256 amount
+    ) internal returns (uint256) {
+        address[] memory path = new address[](2);
+        path[0] = fromToken;
+        path[1] = toToken;
+
+        IERC20Upgradeable asset = IERC20Upgradeable(toToken);
+        uint256 previousBalance = asset.balanceOf(address(this));
+        IUniswapV2Router01(uniswapRouter).swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
+        uint256 currentBalance = asset.balanceOf(address(this));
+        return currentBalance - previousBalance;
     }
 
     function _receiveAsset(address _token, uint256 _amount) internal {
