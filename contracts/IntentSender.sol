@@ -69,21 +69,23 @@ contract IntentSender {
         _receiveAsset(_sourceToken, _amount);
         uint amount = _amount;
         if (_sourceToken != sourceTokenAddress) {
-            amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount);
+            revert("unsupported token");
+            // amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount);
         }
         
-        // _approveAssetForTransfer(sourceTokenAddress, amount);
+        _approveAssetForTransfer(sourceTokenAddress, amount);
 
         // uint256 fee = getCrossChainTransferFee(_destinationChainId, msg.sender);
+        uint256 fee = 1 ether;
 
-        // _transferCrossChain(
-        //     _destinationChainId, 
-        //     sourcePoolId, 
-        //     destinationPoolId[_destinationChainId], 
-        //     amount, 
-        //     msg.sender, 
-        //     fee
-        // );
+        _transferCrossChain(
+            _destinationChainId, 
+            sourcePoolId, 
+            destinationPoolId[_destinationChainId], 
+            amount, 
+            msg.sender, 
+            fee
+        );
     }
 
     //implement pending

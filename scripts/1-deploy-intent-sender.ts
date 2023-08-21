@@ -5,21 +5,21 @@ async function main() {
     deployer,
   ] = await ethers.getSigners();
 
-  const maticAmountToDeposit = ethers.parseEther("100").toString()
-  const maticChainId = 10109;
-  const maticUSDCPoolId = 1;
-  const maticUSDCAddress = "0x742DfA5Aa70a8212857966D491D67B09Ce7D6ec7";
-  const maticRouter = "0x817436a076060D158204d955E5403b6Ed0A5fac0";
-  const uniswapRouter = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
+  const ethereumAmountToDeposit = ethers.parseEther("100").toString()
+  const ethereumChainId = 101;
+  const ethereumUSDCPoolId = 1;
+  const ethereumUSDCAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+  const ethereumStgRouter = "0x8731d54E9D02c286767d56ac03e8037C07e01e98";
+  const ethereumUniswapRouter = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
 
   const intentSender = await ethers.deployContract("IntentSender", [
-    maticChainId,
-    maticUSDCPoolId,
-    maticUSDCAddress,
-    maticRouter,
-    uniswapRouter
+    ethereumChainId,
+    ethereumUSDCPoolId,
+    ethereumUSDCAddress,
+    ethereumStgRouter,
+    ethereumUniswapRouter
   ], {
-    value: maticAmountToDeposit,
+    value: ethereumAmountToDeposit,
     from: deployer.address
   });
 
@@ -28,11 +28,11 @@ async function main() {
   console.log(`IntentSender deployed to ${intentSender.target}`);
 
   // set destination chain id
-  const arbitrumChainId = 10143;
-  const arbitrumUSDCPoolId = 1;
-  await intentSender.setDestination(arbitrumChainId, arbitrumUSDCPoolId);
+  const polygonChainId = 109;
+  const polygonUSDCPoolId = 1;
+  await intentSender.setDestination(polygonChainId, polygonUSDCPoolId);
 
-  console.log(`Arbitrum destination chain id set to ${arbitrumChainId}`);
+  console.log(`Arbitrum destination chain id set to ${polygonChainId}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
