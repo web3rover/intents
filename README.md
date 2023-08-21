@@ -3,7 +3,7 @@
 ## Run Ganache
 
 ```
-ganache --fork <ethereum-mainnet-url> --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain" --wallet.unlockedAccounts="0xcEe284F754E854890e311e3280b767F80797180d"
+ganache --fork <ethereum-mainnet-rpc-url> --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x51eDF02152EBfb338e03E30d65C15fBf06cc9ECC" --gasPrice 19933918981 --fork.blockNumber=17963377
 ```
 
 ## Set ENV
