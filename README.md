@@ -20,4 +20,5 @@ INTENT_SENDER_CONTRACT_ADDRESS="0xaF7a8d953D2556ad3D779b0AA9E8dae0E7EaD965"
 ```
 npx hardhat run --network polygon scripts/1-deploy-intent-sender.ts
 npx hardhat run --network polygon scripts/2-send-intent.ts
+npx hardhat run --network polygon scripts/3-swap-send-intent.ts 
 ```

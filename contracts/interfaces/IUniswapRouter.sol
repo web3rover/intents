@@ -8,8 +8,7 @@ interface IUniswapV2Router01 {
         uint amountIn,
         uint amountOutMin,
         address[] calldata path,
-        address to,
-        uint deadline
+        address to
     ) external returns (uint[] memory amounts);
 
     function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);

@@ -72,18 +72,18 @@ contract IntentSender {
             amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount);
         }
         
-        _approveAssetForTransfer(sourceTokenAddress, amount);
+        // _approveAssetForTransfer(sourceTokenAddress, amount);
 
-        uint256 fee = getCrossChainTransferFee(_destinationChainId, msg.sender);
+        // uint256 fee = getCrossChainTransferFee(_destinationChainId, msg.sender);
 
-        _transferCrossChain(
-            _destinationChainId, 
-            sourcePoolId, 
-            destinationPoolId[_destinationChainId], 
-            amount, 
-            msg.sender, 
-            fee
-        );
+        // _transferCrossChain(
+        //     _destinationChainId, 
+        //     sourcePoolId, 
+        //     destinationPoolId[_destinationChainId], 
+        //     amount, 
+        //     msg.sender, 
+        //     fee
+        // );
     }
 
     //implement pending
@@ -96,9 +96,12 @@ contract IntentSender {
         path[0] = fromToken;
         path[1] = toToken;
 
+        IERC20Upgradeable fromAsset = IERC20Upgradeable(fromToken);
+        fromAsset.safeApprove(uniswapRouter, amount);
+
         IERC20Upgradeable asset = IERC20Upgradeable(toToken);
         uint256 previousBalance = asset.balanceOf(address(this));
-        IUniswapV2Router01(uniswapRouter).swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
+        IUniswapV2Router01(uniswapRouter).swapExactTokensForTokens(amount, 0, path, msg.sender);
         uint256 currentBalance = asset.balanceOf(address(this));
         return currentBalance - previousBalance;
     }
