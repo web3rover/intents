@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "hardhat/console.sol";
@@ -69,14 +69,12 @@ contract IntentSender {
         _receiveAsset(_sourceToken, _amount);
         uint amount = _amount;
         if (_sourceToken != sourceTokenAddress) {
-            revert("unsupported token");
-            // amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount);
+            amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount);
         }
         
         _approveAssetForTransfer(sourceTokenAddress, amount);
 
-        // uint256 fee = getCrossChainTransferFee(_destinationChainId, msg.sender);
-        uint256 fee = 1 ether;
+        uint256 fee = getCrossChainTransferFee(_destinationChainId, msg.sender);
 
         _transferCrossChain(
             _destinationChainId, 
@@ -103,8 +101,20 @@ contract IntentSender {
 
         IERC20Upgradeable asset = IERC20Upgradeable(toToken);
         uint256 previousBalance = asset.balanceOf(address(this));
-        IUniswapV2Router01(uniswapRouter).swapExactTokensForTokens(amount, 0, path, msg.sender);
+        IUniswapRouter.ExactInputSingleParams memory params = IUniswapRouter
+            .ExactInputSingleParams({
+                tokenIn: fromToken,
+                tokenOut: toToken,
+                fee: 3000,
+                recipient: address(this),
+                deadline: block.timestamp,
+                amountIn: amount,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+        IUniswapRouter(uniswapRouter).exactInputSingle(params);
         uint256 currentBalance = asset.balanceOf(address(this));
+        require(currentBalance - previousBalance > 0, "Swap failed");
         return currentBalance - previousBalance;
     }
 
@@ -127,7 +137,7 @@ contract IntentSender {
             _destinationChainId,
             1,
             abi.encodePacked(_toAddress),
-            "",
+            "0x",
             IStargateRouter.lzTxObj(0, 0, "0x")
         );
     }

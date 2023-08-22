@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, hardhat } from "hardhat";
 
 async function main() {
   const [
@@ -24,6 +24,9 @@ async function main() {
   });
 
   await intentSender.waitForDeployment();
+
+  const provider = ethers.getDefaultProvider(process.env.ETHEREUM_MAINNET_URL || "");
+  console.log("Balance of intent sender contract: ", await provider.getBalance(intentSender.target));
 
   console.log(`IntentSender deployed to ${intentSender.target}`);
 

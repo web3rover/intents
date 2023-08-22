@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 
 async function main() {
   const [
@@ -6,41 +6,35 @@ async function main() {
     user
   ] = await ethers.getSigners();
 
-  // update this variable
   const intentSenderContractAddress = process.env.INTENT_SENDER_CONTRACT_ADDRESS || "";
-
-  const maticUSDCContractAddress = "0x742DfA5Aa70a8212857966D491D67B09Ce7D6ec7";
-  const wmaticContractAddress = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889";
-  const wmaticMintAmount = ethers.parseEther("100").toString()
-  const arbitrumChainId = 10143;
-
+  const ethereumWBTCContractAddress = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599";
+  const polygonChainId = 109;
   const intent = await ethers.getContractAt("IntentSender", intentSenderContractAddress, user);
 
-  const wmatic = await ethers.getContractAt("IWETH", wmaticContractAddress, user);
-  await wmatic.deposit({ value: wmaticMintAmount });
+  // mint 
+  const wbtcMintAmount = "100000000" //1 WBTC with 8 decimals
+  const wbtcReserveHolder = "0x593c427d8C7bf5C555Ed41cd7CB7cCe8C9F15bB5"
 
-  console.log(`WMATIC balance of user: ${await wmatic.balanceOf(user.address)}`);
+  const wbtc = await ethers.getContractAt("IERC20", ethereumWBTCContractAddress, user);
+  console.log(`WBTC balance of reserve holder: ${await wbtc.balanceOf(wbtcReserveHolder)}`);
+  const provider = ethers.getDefaultProvider(process.env.ETHEREUM_MAINNET_URL || "");
+  const data = await wbtc.transfer.populateTransaction(user.address, wbtcMintAmount);
+  await provider.send("eth_sendTransaction", [{ from: wbtcReserveHolder, to: ethereumWBTCContractAddress, data: data.data }]);
+  console.log(`USDC balance of user: ${await wbtc.balanceOf(user.address)}`);
 
-  // approve wmatic
-  await wmatic.approve(intentSenderContractAddress, wmaticMintAmount);
-  console.log("Approved WMatic for IntentSender")
+  // approve USDC
+  await wbtc.approve(intentSenderContractAddress, wbtcMintAmount);
+  console.log("Approved WBTC for IntentSender")
+
+  const fee = await intent.getCrossChainTransferFee(polygonChainId, user.address);
+  console.log(`Cross chain transfer fee: ${fee.toString()}`);
 
   // send intent
-  // await intent.sendIntent(
-  //   arbitrumChainId,
-  //   wmaticContractAddress,
-  //   wmaticMintAmount,
-  // );
-
-  const uniswapRouter = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
-  const router = await ethers.getContractAt("IUniswapV2Router01", uniswapRouter, user);
-  await wmatic.approve(uniswapRouter, wmaticMintAmount);
-  await router.swapExactTokensForTokens(
-    wmaticMintAmount,
-    0,
-    [wmaticContractAddress, maticUSDCContractAddress],
-    user.address,
-  )
+  await intent.sendIntent(
+    polygonChainId,
+    ethereumWBTCContractAddress,
+    wbtcMintAmount,
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere
