@@ -8,6 +8,7 @@ async function main() {
 
   const intentSenderContractAddress = process.env.INTENT_SENDER_CONTRACT_ADDRESS || "";
   const ethereumWBTCContractAddress = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599";
+  const polygonWETHAddress = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619";
   const polygonChainId = 109;
   const intent = await ethers.getContractAt("IntentSender", intentSenderContractAddress, user);
 
@@ -34,7 +35,14 @@ async function main() {
     polygonChainId,
     ethereumWBTCContractAddress,
     wbtcMintAmount,
+    polygonWETHAddress,
+    0,
+    {
+      value: (ethers.parseEther("0.1").toString())
+    }
   );
+
+  console.log("Intent sent successfully")
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -8,6 +8,7 @@ async function main() {
 
   const intentSenderContractAddress = process.env.INTENT_SENDER_CONTRACT_ADDRESS || "";
   const ethereumUSDCContractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+  const polygonWETHAddress = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619";
   const polygonChainId = 109;
   const intent = await ethers.getContractAt("IntentSender", intentSenderContractAddress, user);
 
@@ -26,15 +27,19 @@ async function main() {
   await usdc.approve(intentSenderContractAddress, usdcMintAmount);
   console.log("Approved USDC for IntentSender")
 
-  const fee = await intent.getCrossChainTransferFee(polygonChainId, user.address);
-  console.log(`Cross chain transfer fee: ${fee.toString()}`);
-
   // send intent
   await intent.sendIntent(
     polygonChainId,
     ethereumUSDCContractAddress,
     usdcMintAmount,
+    polygonWETHAddress,
+    0,
+    {
+      value: (ethers.parseEther("0.1").toString())
+    }
   );
+
+  console.log("Intent sent successfully")
 }
 
 // We recommend this pattern to be able to use async/await everywhere

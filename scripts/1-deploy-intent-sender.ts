@@ -19,7 +19,6 @@ async function main() {
     ethereumStgRouter,
     ethereumUniswapRouter
   ], {
-    value: ethereumAmountToDeposit,
     from: deployer.address
   });
 

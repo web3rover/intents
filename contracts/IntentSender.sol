@@ -6,11 +6,14 @@ import "hardhat/console.sol";
 
 import "./interfaces/IStargateRouter.sol";
 import "./interfaces/IUniswapRouter.sol";
+import "./IntentReceiver.sol";
 
 contract IntentSender {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     uint256 public constant MAX_BPS = 10000;
+
+    uint256 public constant GAS_REQUIRED_ON_DESTINATION = 5000000;
 
     ///////////////////////////////////////////////////
     /////////////// STG Configuration ////////////////
@@ -62,7 +65,13 @@ contract IntentSender {
         destinationPoolId[_destinationChainId] = _destinationPoolId;
     }
 
-    function sendIntent(uint16 _destinationChainId, address _sourceToken, uint256 _amount) external {
+    function sendIntent(
+        uint16 _destinationChainId, 
+        address _sourceToken,
+        uint256 _amount,
+        address _destinationToken,
+        uint256 _destinationNativeAmount
+    ) external payable {
         require(destinationConfigured[_destinationChainId], "Destination not configured");
         require(_amount > 0, "Amount must be greater than 0");
 
@@ -71,10 +80,13 @@ contract IntentSender {
         if (_sourceToken != sourceTokenAddress) {
             amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount);
         }
-        
+
         _approveAssetForTransfer(sourceTokenAddress, amount);
 
-        uint256 fee = getCrossChainTransferFee(_destinationChainId, msg.sender);
+        uint256 destinationAmountMin = (amount * minimumAmountInDestination) / MAX_BPS;
+
+        bytes memory destinationPayload = abi.encodeWithSignature("receiveIntent(address,address,uint256)", _destinationToken, msg.sender, destinationAmountMin);
+        uint256 fee = _getCrossChainTransferFee(_destinationChainId, msg.sender, destinationPayload, _destinationNativeAmount);
 
         _transferCrossChain(
             _destinationChainId, 
@@ -82,7 +94,9 @@ contract IntentSender {
             destinationPoolId[_destinationChainId], 
             amount, 
             msg.sender, 
-            fee
+            fee,
+            destinationAmountMin,
+            _destinationNativeAmount
         );
     }
 
@@ -128,17 +142,19 @@ contract IntentSender {
         asset.safeApprove(stgRouter, _amount);
     }
 
-    function getCrossChainTransferFee(
+    function _getCrossChainTransferFee(
         uint16 _destinationChainId,
-        address _toAddress
-    ) view public returns (uint256 fee) {
+        address _toAddress,
+        bytes memory destinationPayload,
+        uint256 _destinationNativeAmount
+    ) view internal returns (uint256 fee) {
         IStargateRouter router = IStargateRouter(stgRouter);
         (fee, ) = router.quoteLayerZeroFee(
             _destinationChainId,
             1,
             abi.encodePacked(_toAddress),
-            "0x",
-            IStargateRouter.lzTxObj(0, 0, "0x")
+            destinationPayload,
+            IStargateRouter.lzTxObj(GAS_REQUIRED_ON_DESTINATION, _destinationNativeAmount, abi.encodePacked(_toAddress))
         );
     }
 
@@ -148,10 +164,10 @@ contract IntentSender {
         uint256 _destinationPoolId,
         uint256 _amount,
         address _toAddress,
-        uint256 _fee
+        uint256 _fee,
+        uint256 _destinationAmountMin,
+        uint256 _destinationNativeAmount
     ) internal {
-        uint256 destinationAmountMin = (_amount * minimumAmountInDestination) / MAX_BPS;
-
         IStargateRouter router = IStargateRouter(stgRouter);
         router.swap{ value: _fee }(
             _destinationChainId,
@@ -159,8 +175,8 @@ contract IntentSender {
             _destinationPoolId,
             payable(address(this)),
             _amount,
-            destinationAmountMin,
-            IStargateRouter.lzTxObj(0, 0, "0x"),
+            _destinationAmountMin,
+            IStargateRouter.lzTxObj(GAS_REQUIRED_ON_DESTINATION, _destinationNativeAmount, "0x"),
             abi.encodePacked(_toAddress),
             "0x"
         );
