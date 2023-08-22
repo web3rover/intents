@@ -14,6 +14,13 @@ const config: HardhatUserConfig = {
         process.env.USER_PRIVATE_KEY || ""
       ],
     },
+    polygon: {
+      url: process.env.ETHEREUM_MAINNET_URL,
+      accounts: [
+        process.env.DEPLOYER_PRIVATE_KEY || "",
+        process.env.USER_PRIVATE_KEY || ""
+      ],
+    },
   },
 };
 

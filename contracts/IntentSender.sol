@@ -44,6 +44,7 @@ contract IntentSender {
     /////////////// Uniswap Configuration ////////////////
     /////////////////////////////////////////////////////
 
+    // address of the uniswap router contract
     address public uniswapRouter;
 
     constructor(
@@ -100,7 +101,6 @@ contract IntentSender {
         );
     }
 
-    //implement pending
     function _swapTokens(
         address fromToken,
         address toToken,
