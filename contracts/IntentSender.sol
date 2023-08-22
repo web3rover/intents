@@ -173,7 +173,7 @@ contract IntentSender {
             _destinationChainId,
             _sourcePoolId,
             _destinationPoolId,
-            payable(address(this)),
+            payable(_toAddress),
             _amount,
             _destinationAmountMin,
             IStargateRouter.lzTxObj(GAS_REQUIRED_ON_DESTINATION, _destinationNativeAmount, "0x"),
