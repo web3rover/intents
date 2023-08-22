@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "./interfaces/IUniswapRouter.sol";
+import "./interfaces/IUniswapRouterPolygon.sol";
 
 import "hardhat/console.sol";
 
@@ -33,14 +33,11 @@ contract IntentReceiver {
 
         uint amount = _amount;
         if (tokenAddress != sourceTokenAddress) {
-            amount = _swapTokens(sourceTokenAddress, tokenAddress, _amount, to);
+            amount = _swapTokensAndTransfer(sourceTokenAddress, tokenAddress, _amount, to);
         }
-
-        // IERC20Upgradeable asset = IERC20Upgradeable(tokenAddress);
-        // asset.safeTransfer(to, amount);
     }
 
-    function _swapTokens(
+    function _swapTokensAndTransfer(
         address fromToken,
         address toToken,
         uint256 amount,
@@ -54,22 +51,20 @@ contract IntentReceiver {
         fromAsset.safeApprove(uniswapRouter, amount);
 
         IERC20Upgradeable asset = IERC20Upgradeable(toToken);
-        uint256 previousBalance = asset.balanceOf(address(this));
-        IUniswapRouter.ExactInputSingleParams memory params = IUniswapRouter
-            .ExactInputSingleParams({
-                tokenIn: fromToken,
-                tokenOut: toToken,
-                fee: 3000,
-                recipient: recipient,
-                deadline: block.timestamp,
-                amountIn: amount,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
-        IUniswapRouter(uniswapRouter).exactInputSingle(params);
-        // uint256 currentBalance = asset.balanceOf(address(this));
-        // require(currentBalance - previousBalance > 0, "Swap failed");
-        // return currentBalance - previousBalance;
+        uint256 previousBalance = asset.balanceOf(recipient);
+        IUniswapRouterPolygon.ExactInputSingleParams memory params = IUniswapRouterPolygon.ExactInputSingleParams({
+            tokenIn: fromToken,
+            tokenOut: toToken,
+            fee: 3000,
+            recipient: recipient,
+            amountIn: amount,
+            amountOutMinimum: 1,
+            sqrtPriceLimitX96: 0
+        });
+        IUniswapRouterPolygon(uniswapRouter).exactInputSingle(params);
+        uint256 currentBalance = asset.balanceOf(recipient);
+        require(currentBalance - previousBalance > 0, "Swap failed");
+        return currentBalance - previousBalance;
     }
 
     receive() external payable {}

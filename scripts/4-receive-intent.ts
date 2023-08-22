@@ -35,6 +35,9 @@ async function main() {
   console.log("Transfered USDC for IntentReceiver. Balance is: ", await usdc.balanceOf(intentReceiver.target))
 
   // send intent
+  const weth = await ethers.getContractAt("IERC20", polygonWETHContractAddress, deployer);
+  console.log(await intentReceiver.sourceTokenAddress(), polygonWETHContractAddress)
+  console.log("Previous WETH balance of user: ", await weth.balanceOf(user.address))
   await intentReceiver.receiveIntent(
     polygonWETHContractAddress,
     user.address,
@@ -42,6 +45,7 @@ async function main() {
   )
 
   console.log("Intent executed successfully")
+  console.log("Current WETH balance of user: ", (await weth.balanceOf(user.address)).toString())
 }
 
 // We recommend this pattern to be able to use async/await everywhere
