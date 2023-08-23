@@ -34,11 +34,12 @@ contract IntentReceiver {
         uint amount = _amount;
         if (tokenAddress != sourceTokenAddress) {
             amount = _swapTokensAndTransfer(sourceTokenAddress, tokenAddress, _amount, to);
-            return;
+        } else {
+            IERC20Upgradeable token = IERC20Upgradeable(tokenAddress);
+            token.safeTransfer(to, amount);
         }
 
-        IERC20Upgradeable token = IERC20Upgradeable(tokenAddress);
-        token.safeTransfer(to, amount);
+        payable(to).transfer(address(this).balance);
     }
 
     function _swapTokensAndTransfer(
