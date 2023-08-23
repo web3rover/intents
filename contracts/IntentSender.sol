@@ -28,6 +28,9 @@ contract IntentSender {
     // destinationChainId => destinationPoolId (ex: USDC pool ID)
     mapping (uint16 => uint256) public destinationPoolId;
 
+    // destinationChainId => destinationAddress (ex: address of IntentReceiver contract)
+    mapping (uint16 => address) public destinationAddress;
+
     // chain id of the chain where the intent was created
     uint16 public sourceChainId; 
 
@@ -61,9 +64,10 @@ contract IntentSender {
         uniswapRouter = _uniswapRouter;
     }
 
-    function setDestination(uint16 _destinationChainId, uint256 _destinationPoolId) external {
+    function setDestination(uint16 _destinationChainId, uint256 _destinationPoolId, address _destinationAddress) external {
         destinationConfigured[_destinationChainId] = true;
         destinationPoolId[_destinationChainId] = _destinationPoolId;
+        destinationAddress[_destinationChainId] = _destinationAddress;
     }
 
     function sendIntent(
@@ -97,7 +101,8 @@ contract IntentSender {
             msg.sender, 
             fee,
             destinationAmountMin,
-            _destinationNativeAmount
+            _destinationNativeAmount,
+            destinationPayload
         );
     }
 
@@ -152,9 +157,9 @@ contract IntentSender {
         (fee, ) = router.quoteLayerZeroFee(
             _destinationChainId,
             1,
-            abi.encodePacked(_toAddress),
+            abi.encodePacked(destinationAddress[_destinationChainId]),
             destinationPayload,
-            IStargateRouter.lzTxObj(GAS_REQUIRED_ON_DESTINATION, _destinationNativeAmount, abi.encodePacked(_toAddress))
+            IStargateRouter.lzTxObj(GAS_REQUIRED_ON_DESTINATION, _destinationNativeAmount, abi.encodePacked(destinationAddress[_destinationChainId]))
         );
     }
 
@@ -166,19 +171,21 @@ contract IntentSender {
         address _toAddress,
         uint256 _fee,
         uint256 _destinationAmountMin,
-        uint256 _destinationNativeAmount
+        uint256 _destinationNativeAmount,
+        bytes memory destinationPayload
     ) internal {
         IStargateRouter router = IStargateRouter(stgRouter);
+        address dstAddr = destinationAddress[_destinationChainId];
         router.swap{ value: _fee }(
             _destinationChainId,
             _sourcePoolId,
             _destinationPoolId,
-            payable(_toAddress),
+            payable(msg.sender),
             _amount,
             _destinationAmountMin,
-            IStargateRouter.lzTxObj(GAS_REQUIRED_ON_DESTINATION, _destinationNativeAmount, "0x"),
-            abi.encodePacked(_toAddress),
-            "0x"
+            IStargateRouter.lzTxObj(GAS_REQUIRED_ON_DESTINATION, _destinationNativeAmount, abi.encodePacked(dstAddr)),
+            abi.encodePacked(dstAddr),
+            destinationPayload
         );
     }
 

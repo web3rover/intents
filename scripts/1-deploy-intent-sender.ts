@@ -11,6 +11,7 @@ async function main() {
   const ethereumUSDCAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
   const ethereumStgRouter = "0x8731d54E9D02c286767d56ac03e8037C07e01e98";
   const ethereumUniswapRouter = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+  const polygonIntentReceiver = "0x0000000000000000000000000000000000000000";
 
   const intentSender = await ethers.deployContract("IntentSender", [
     ethereumChainId,
@@ -32,9 +33,9 @@ async function main() {
   // set destination chain id
   const polygonChainId = 109;
   const polygonUSDCPoolId = 1;
-  await intentSender.setDestination(polygonChainId, polygonUSDCPoolId);
+  await intentSender.setDestination(polygonChainId, polygonUSDCPoolId, polygonIntentReceiver);
 
-  console.log(`Arbitrum destination chain id set to ${polygonChainId}`);
+  console.log(`Polygon destination chain id set to ${polygonChainId}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

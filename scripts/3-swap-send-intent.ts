@@ -27,9 +27,6 @@ async function main() {
   await wbtc.approve(intentSenderContractAddress, wbtcMintAmount);
   console.log("Approved WBTC for IntentSender")
 
-  const fee = await intent.getCrossChainTransferFee(polygonChainId, user.address);
-  console.log(`Cross chain transfer fee: ${fee.toString()}`);
-
   // send intent
   await intent.sendIntent(
     polygonChainId,

@@ -3,11 +3,11 @@
 ## Run Ganache
 
 ```
-ganache --fork <ethereum-mainnet-rpc-url> --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x51eDF02152EBfb338e03E30d65C15fBf06cc9ECC" --gasPrice 19933918981 --fork.blockNumber=17963377
+ganache --fork https://eth-mainnet.g.alchemy.com/v2/SGIt_uynzEbEJ-NdEpefz4zl9mitmTJK --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x51eDF02152EBfb338e03E30d65C15fBf06cc9ECC" --gasPrice 19933918981 --fork.blockNumber=17963377
 
-ganache --fork <ethereum-mainnet-rpc-url> --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x593c427d8C7bf5C555Ed41cd7CB7cCe8C9F15bB5" --gasPrice 19933918981 --fork.blockNumber=17963377
+ganache --fork https://eth-mainnet.g.alchemy.com/v2/SGIt_uynzEbEJ-NdEpefz4zl9mitmTJK --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x593c427d8C7bf5C555Ed41cd7CB7cCe8C9F15bB5" --gasPrice 19933918981 --fork.blockNumber=17963377
 
-ganache --fork <polygon-mainnet-rpc-url> --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x075e72a5eDf65F0A5f44699c7654C1a76941Ddc8" --fork.blockNumber=46631876
+ganache --fork https://polygon-mainnet.g.alchemy.com/v2/NcMgH6MLzZIWOm3eO3QQ_vy553Vt2Jvs --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x075e72a5eDf65F0A5f44699c7654C1a76941Ddc8" --fork.blockNumber=46631876 --gasPrice 595072529378
 ```
 
 ## Set ENV
