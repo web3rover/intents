@@ -10,7 +10,7 @@ async function main() {
   const ethereumUSDCAddress = "0xDf0360Ad8C5ccf25095Aa97ee5F2785c8d848620";
   const ethereumStgRouter = "0x7612aE2a34E5A363E137De748801FB4c86499152";
   const ethereumUniswapRouter = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
-  const optimismIntentReceiver = "0xac4c1D5eEC117c983dDF6D96893065f5C0b949aF"; //fill from previous script
+  const optimismIntentReceiver = "0x84cf491D44ebE1c0c7b10E97Cd5873208309436A"; //fill from previous script
 
   const intentSender = await ethers.deployContract("IntentSender", [
     ethereumChainId,
