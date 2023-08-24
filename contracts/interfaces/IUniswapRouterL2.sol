@@ -1,6 +1,6 @@
 pragma solidity ^0.8.9;
 
-interface IUniswapRouterPolygon {
+interface IUniswapRouterL2 {
     struct ExactInputSingleParams {
         address tokenIn;
         address tokenOut;

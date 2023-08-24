@@ -1,29 +1,16 @@
 # intents
 
-## Run Ganache
-
-```
-ganache --fork https://eth-mainnet.g.alchemy.com/v2/SGIt_uynzEbEJ-NdEpefz4zl9mitmTJK --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x51eDF02152EBfb338e03E30d65C15fBf06cc9ECC" --gasPrice 19933918981 --fork.blockNumber=17963377
-
-ganache --fork https://eth-mainnet.g.alchemy.com/v2/SGIt_uynzEbEJ-NdEpefz4zl9mitmTJK --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x593c427d8C7bf5C555Ed41cd7CB7cCe8C9F15bB5" --gasPrice 19933918981 --fork.blockNumber=17963377
-
-ganache --fork https://polygon-mainnet.g.alchemy.com/v2/NcMgH6MLzZIWOm3eO3QQ_vy553Vt2Jvs --port 8545 -h=0.0.0.0 -m="rifle cloud amused end pyramid swarm anxiety kitchen ceiling cotton rib gain"  --wallet.unlockedAccounts="0x075e72a5eDf65F0A5f44699c7654C1a76941Ddc8" --fork.blockNumber=46631876 --gasPrice 595072529378
-```
-
 ## Set ENV
 
 ```
-DEPLOYER_PRIVATE_KEY="0x54ae3b70c6c1a496e10ef9ccd118eafc37fb588f5a7c68fc8bf9780d06218ba0"
-USER_PRIVATE_KEY="0x3eec730f3e26489d4a3392f0a25ed3602cd312b484ddc37beef31c2571d5e2bb"
-ETHEREUM_MAINNET_URL="http://localhost:8545"
-POLYGON_MAINNET_URL="http://localhost:8545"
-INTENT_SENDER_CONTRACT_ADDRESS="0xaF7a8d953D2556ad3D779b0AA9E8dae0E7EaD965"
+DEPLOYER_PRIVATE_KEY=""
+ETHEREUM_MAINNET_URL=""
+POLYGON_MAINNET_URL=""
 ```
 
 ## Run Testing Scripts
 
 ```
-npx hardhat run --network ethereum scripts/1-deploy-intent-sender.ts
-npx hardhat run --network ethereum scripts/2-send-intent.ts
-npx hardhat run --network ethereum scripts/3-swap-send-intent.ts 
+npx hardhat run --network optimism scripts/1-receive-intent.ts
+npx hardhat run --network ethereum scripts/2-deploy-intent-sender
 ```

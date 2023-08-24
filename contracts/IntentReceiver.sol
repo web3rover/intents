@@ -2,11 +2,12 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "./interfaces/IUniswapRouterPolygon.sol";
+import "./interfaces/IUniswapRouterL2.sol";
+import "./interfaces/IStargateReceiver.sol";
 
 import "hardhat/console.sol";
 
-contract IntentReceiver {
+contract IntentReceiver is IStargateReceiver {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     // address of the token that can be bridged (ex: USDC)
@@ -14,7 +15,6 @@ contract IntentReceiver {
 
     // address of the uniswap router contract
     address public uniswapRouter;
-
 
     constructor(
         address _sourceTokenAddress,
@@ -24,19 +24,34 @@ contract IntentReceiver {
         uniswapRouter = _uniswapRouter;
     }
 
-    function receiveIntent(
-        address tokenAddress,
-        address to,
-        uint256 _amount
-    ) payable external {
-        require(_amount > 0, "Amount must be greater than 0");
+    function sgReceive(
+        uint16 _srcChainId,              // the remote chainId sending the tokens
+        bytes memory _srcAddress,        // the remote Bridge address
+        uint256 _nonce,                  
+        address _token,                  // the token contract on the local chain
+        uint256 amountLD,                // the qty of local _token contract tokens  
+        bytes memory payload
+    ) external payable {
+        (
+            address tokenAddress,
+            address to
+        ) = abi.decode(payload, (address, address));
+        executeIntent(tokenAddress, to);
+    }
 
-        uint amount = _amount;
+    function executeIntent(
+        address tokenAddress,
+        address to
+    ) payable public {
+        IERC20Upgradeable source = IERC20Upgradeable(sourceTokenAddress);
+        uint256 amount = source.balanceOf(address(this));
+
+        require(amount > 0, "Amount must be greater than 0");
+
         if (tokenAddress != sourceTokenAddress) {
-            amount = _swapTokensAndTransfer(sourceTokenAddress, tokenAddress, _amount, to);
+            amount = _swapTokensAndTransfer(sourceTokenAddress, tokenAddress, amount, to);
         } else {
-            IERC20Upgradeable token = IERC20Upgradeable(tokenAddress);
-            token.safeTransfer(to, amount);
+            source.safeTransfer(to, amount);
         }
 
         payable(to).transfer(address(this).balance);
@@ -57,7 +72,7 @@ contract IntentReceiver {
 
         IERC20Upgradeable asset = IERC20Upgradeable(toToken);
         uint256 previousBalance = asset.balanceOf(recipient);
-        IUniswapRouterPolygon.ExactInputSingleParams memory params = IUniswapRouterPolygon.ExactInputSingleParams({
+        IUniswapRouterL2.ExactInputSingleParams memory params = IUniswapRouterL2.ExactInputSingleParams({
             tokenIn: fromToken,
             tokenOut: toToken,
             fee: 3000,
@@ -66,7 +81,7 @@ contract IntentReceiver {
             amountOutMinimum: 1,
             sqrtPriceLimitX96: 0
         });
-        IUniswapRouterPolygon(uniswapRouter).exactInputSingle(params);
+        IUniswapRouterL2(uniswapRouter).exactInputSingle(params);
         uint256 currentBalance = asset.balanceOf(recipient);
         require(currentBalance - previousBalance > 0, "Swap failed");
         return currentBalance - previousBalance;

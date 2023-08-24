@@ -13,7 +13,7 @@ contract IntentSender {
 
     uint256 public constant MAX_BPS = 10000;
 
-    uint256 public constant GAS_REQUIRED_ON_DESTINATION = 5000000;
+    uint256 public constant GAS_REQUIRED_ON_DESTINATION = 600000;
 
     ///////////////////////////////////////////////////
     /////////////// STG Configuration ////////////////
@@ -89,9 +89,9 @@ contract IntentSender {
         _approveAssetForTransfer(sourceTokenAddress, amount);
 
         uint256 destinationAmountMin = (amount * minimumAmountInDestination) / MAX_BPS;
-
-        bytes memory destinationPayload = abi.encodeWithSignature("receiveIntent(address,address,uint256)", _destinationToken, msg.sender, destinationAmountMin);
-        uint256 fee = _getCrossChainTransferFee(_destinationChainId, msg.sender, destinationPayload, _destinationNativeAmount);
+        
+        bytes memory destinationPayload = abi.encode(_destinationToken, msg.sender);
+        uint256 fee = _getCrossChainTransferFee(_destinationChainId, destinationPayload, _destinationNativeAmount);
 
         _transferCrossChain(
             _destinationChainId, 
@@ -149,7 +149,6 @@ contract IntentSender {
 
     function _getCrossChainTransferFee(
         uint16 _destinationChainId,
-        address _toAddress,
         bytes memory destinationPayload,
         uint256 _destinationNativeAmount
     ) view internal returns (uint256 fee) {
@@ -161,6 +160,14 @@ contract IntentSender {
             destinationPayload,
             IStargateRouter.lzTxObj(GAS_REQUIRED_ON_DESTINATION, _destinationNativeAmount, abi.encodePacked(destinationAddress[_destinationChainId]))
         );
+    }
+
+    function getCrossChainTransferFee(
+        uint16 _destinationChainId,
+        uint256 _destinationNativeAmount
+    ) view external returns (uint256 fee) {
+        bytes memory destinationPayload = abi.encode(address(0), msg.sender);
+        return _getCrossChainTransferFee(_destinationChainId, destinationPayload, _destinationNativeAmount);
     }
 
     function _transferCrossChain(

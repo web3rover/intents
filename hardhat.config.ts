@@ -11,15 +11,14 @@ const config: HardhatUserConfig = {
       url: process.env.ETHEREUM_MAINNET_URL,
       accounts: [
         process.env.DEPLOYER_PRIVATE_KEY || "",
-        process.env.USER_PRIVATE_KEY || ""
       ],
     },
-    polygon: {
-      url: process.env.ETHEREUM_MAINNET_URL,
+    optimism: {
+      url: process.env.OPTIMISM_MAINNET_URL,
       accounts: [
         process.env.DEPLOYER_PRIVATE_KEY || "",
-        process.env.USER_PRIVATE_KEY || ""
       ],
+      gasPrice: 120000060
     },
   },
 };
