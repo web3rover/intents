@@ -11,7 +11,15 @@ contract IntentSender {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     struct IntentData {
-        
+        uint16 destinationChainId; 
+        address sourceToken;
+        uint256 amount;
+        address destinationToken;
+        uint256 destinationNativeAmount;
+        address sourceSwapper;
+        address destinationSwapper;
+        bytes sourceSwapData;
+        bytes destinationSwapData;
     }
 
     uint256 public constant MAX_BPS = 10000;
@@ -65,43 +73,35 @@ contract IntentSender {
     }
 
     function sendIntent(
-        uint16 _destinationChainId, 
-        address _sourceToken,
-        uint256 _amount,
-        address _destinationToken,
-        uint256 _destinationNativeAmount,
-        address _sourceSwapper,
-        address _destinationSwapper,
-        bytes calldata _sourceSwapData,
-        bytes calldata _destinationSwapData
+        IntentData calldata _intentData
     ) external payable {
-        require(destinationConfigured[_destinationChainId], "Destination not configured");
-        require(_amount > 0, "Amount must be greater than 0");
+        require(destinationConfigured[_intentData.destinationChainId], "Destination not configured");
+        require(_intentData.amount > 0, "Amount must be greater than 0");
 
-        _receiveAsset(_sourceToken, _amount);
-        uint amount = _amount;
-        if (_sourceToken != sourceTokenAddress) {
-            amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount, _sourceSwapper, _sourceSwapData);
+        _receiveAsset(_intentData.sourceToken, _intentData.amount);
+        uint amount = _intentData.amount;
+        if (_intentData.sourceToken != sourceTokenAddress) {
+            amount = _swapTokens(_intentData.sourceToken, sourceTokenAddress, _intentData.amount, _intentData.sourceSwapper, _intentData.sourceSwapData);
         }
 
         _approveAssetForTransfer(sourceTokenAddress, amount);
 
         uint256 destinationAmountMin = (amount * minimumAmountInDestination) / MAX_BPS;
         
-        bytes memory destinationPayload = abi.encode(_destinationToken, msg.sender, _destinationSwapper, _destinationSwapData);
-        uint256 fee = _getCrossChainTransferFee(_destinationChainId, destinationPayload, _destinationNativeAmount);
+        bytes memory destinationPayload = abi.encode(_intentData.destinationToken, msg.sender, _intentData.destinationSwapper, _intentData.destinationSwapData);
+        uint256 fee = _getCrossChainTransferFee(_intentData.destinationChainId, destinationPayload, _intentData.destinationNativeAmount);
 
-        uint256 _destinationPoolId = destinationPoolId[_destinationChainId];
+        uint256 _destinationPoolId = destinationPoolId[_intentData.destinationChainId];
 
         _transferCrossChain(
-            _destinationChainId, 
+            _intentData.destinationChainId, 
             sourcePoolId, 
             _destinationPoolId, 
             amount, 
             msg.sender, 
             fee,
             destinationAmountMin,
-            _destinationNativeAmount,
+            _intentData.destinationNativeAmount,
             destinationPayload
         );
     }

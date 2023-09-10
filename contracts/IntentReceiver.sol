@@ -2,10 +2,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "./interfaces/IUniswapRouterL2.sol";
 import "./interfaces/IStargateReceiver.sol";
-
-import "hardhat/console.sol";
 
 contract IntentReceiver is IStargateReceiver {
     using SafeERC20Upgradeable for IERC20Upgradeable;
