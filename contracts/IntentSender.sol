@@ -5,11 +5,14 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "hardhat/console.sol";
 
 import "./interfaces/IStargateRouter.sol";
-import "./interfaces/IUniswapRouter.sol";
 import "./IntentReceiver.sol";
 
 contract IntentSender {
     using SafeERC20Upgradeable for IERC20Upgradeable;
+
+    struct IntentData {
+        
+    }
 
     uint256 public constant MAX_BPS = 10000;
 
@@ -43,25 +46,16 @@ contract IntentSender {
     // address of the STG router contract
     address public stgRouter;
 
-    ///////////////////////////////////////////////////////
-    /////////////// Uniswap Configuration ////////////////
-    /////////////////////////////////////////////////////
-
-    // address of the uniswap router contract
-    address public uniswapRouter;
-
     constructor(
         uint16 _sourceChainId,
         uint256 _sourcePoolId,
         address _sourceTokenAddress,
-        address _stgRouter,
-        address _uniswapRouter
+        address _stgRouter
     ) payable {
         sourceChainId = _sourceChainId;
         sourcePoolId = _sourcePoolId;
         sourceTokenAddress = _sourceTokenAddress;
         stgRouter = _stgRouter;
-        uniswapRouter = _uniswapRouter;
     }
 
     function setDestination(uint16 _destinationChainId, uint256 _destinationPoolId, address _destinationAddress) external {
@@ -75,7 +69,11 @@ contract IntentSender {
         address _sourceToken,
         uint256 _amount,
         address _destinationToken,
-        uint256 _destinationNativeAmount
+        uint256 _destinationNativeAmount,
+        address _sourceSwapper,
+        address _destinationSwapper,
+        bytes calldata _sourceSwapData,
+        bytes calldata _destinationSwapData
     ) external payable {
         require(destinationConfigured[_destinationChainId], "Destination not configured");
         require(_amount > 0, "Amount must be greater than 0");
@@ -83,20 +81,22 @@ contract IntentSender {
         _receiveAsset(_sourceToken, _amount);
         uint amount = _amount;
         if (_sourceToken != sourceTokenAddress) {
-            amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount);
+            amount = _swapTokens(_sourceToken, sourceTokenAddress, _amount, _sourceSwapper, _sourceSwapData);
         }
 
         _approveAssetForTransfer(sourceTokenAddress, amount);
 
         uint256 destinationAmountMin = (amount * minimumAmountInDestination) / MAX_BPS;
         
-        bytes memory destinationPayload = abi.encode(_destinationToken, msg.sender);
+        bytes memory destinationPayload = abi.encode(_destinationToken, msg.sender, _destinationSwapper, _destinationSwapData);
         uint256 fee = _getCrossChainTransferFee(_destinationChainId, destinationPayload, _destinationNativeAmount);
+
+        uint256 _destinationPoolId = destinationPoolId[_destinationChainId];
 
         _transferCrossChain(
             _destinationChainId, 
             sourcePoolId, 
-            destinationPoolId[_destinationChainId], 
+            _destinationPoolId, 
             amount, 
             msg.sender, 
             fee,
@@ -109,29 +109,20 @@ contract IntentSender {
     function _swapTokens(
         address fromToken,
         address toToken,
-        uint256 amount
+        uint256 amount,
+        address swapper,
+        bytes memory swapData
     ) internal returns (uint256) {
-        address[] memory path = new address[](2);
-        path[0] = fromToken;
-        path[1] = toToken;
-
         IERC20Upgradeable fromAsset = IERC20Upgradeable(fromToken);
-        fromAsset.safeApprove(uniswapRouter, amount);
+        fromAsset.safeApprove(swapper, amount);
 
         IERC20Upgradeable asset = IERC20Upgradeable(toToken);
         uint256 previousBalance = asset.balanceOf(address(this));
-        IUniswapRouter.ExactInputSingleParams memory params = IUniswapRouter
-            .ExactInputSingleParams({
-                tokenIn: fromToken,
-                tokenOut: toToken,
-                fee: 3000,
-                recipient: address(this),
-                deadline: block.timestamp,
-                amountIn: amount,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
-        IUniswapRouter(uniswapRouter).exactInputSingle(params);
+        
+        // no native token support for swap
+        // use swapper.call{value: nativeValue}(_swap.callData)
+        swapper.call(swapData); 
+
         uint256 currentBalance = asset.balanceOf(address(this));
         require(currentBalance - previousBalance > 0, "Swap failed");
         return currentBalance - previousBalance;
@@ -164,9 +155,11 @@ contract IntentSender {
 
     function getCrossChainTransferFee(
         uint16 _destinationChainId,
-        uint256 _destinationNativeAmount
+        uint256 _destinationNativeAmount,
+        address _destinationSwapper,
+        bytes calldata _destinationSwapData
     ) view external returns (uint256 fee) {
-        bytes memory destinationPayload = abi.encode(address(0), msg.sender);
+        bytes memory destinationPayload = abi.encode(address(0), msg.sender, _destinationSwapper, _destinationSwapData);
         return _getCrossChainTransferFee(_destinationChainId, destinationPayload, _destinationNativeAmount);
     }
 

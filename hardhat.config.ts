@@ -5,7 +5,15 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.19",
+  solidity: {
+    version: "0.8.19",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
+  },
   networks: {
     ethereum: {
       url: process.env.ETHEREUM_MAINNET_URL,
@@ -18,7 +26,18 @@ const config: HardhatUserConfig = {
       accounts: [
         process.env.DEPLOYER_PRIVATE_KEY || "",
       ],
-      gasPrice: 120000060
+    },
+    ethereum_goreli: {
+      url: process.env.ETHEREUM_GOERLI_URL,
+      accounts: [
+        process.env.DEPLOYER_PRIVATE_KEY || "",
+      ],
+    },
+    optimism_goreli: {
+      url: process.env.OPTIMISM_GOERLI_URL,
+      accounts: [
+        process.env.DEPLOYER_PRIVATE_KEY || "",
+      ],
     },
   },
 };

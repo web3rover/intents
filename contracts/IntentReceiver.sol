@@ -13,15 +13,10 @@ contract IntentReceiver is IStargateReceiver {
     // address of the token that can be bridged (ex: USDC)
     address public sourceTokenAddress;
 
-    // address of the uniswap router contract
-    address public uniswapRouter;
-
     constructor(
-        address _sourceTokenAddress,
-        address _uniswapRouter
+        address _sourceTokenAddress
     ) {
         sourceTokenAddress = _sourceTokenAddress;
-        uniswapRouter = _uniswapRouter;
     }
 
     function sgReceive(
@@ -34,14 +29,18 @@ contract IntentReceiver is IStargateReceiver {
     ) external payable {
         (
             address tokenAddress,
-            address to
-        ) = abi.decode(payload, (address, address));
-        executeIntent(tokenAddress, to);
+            address to,
+            address swapper,
+            bytes memory swapData
+        ) = abi.decode(payload, (address, address, address, bytes));
+        executeIntent(tokenAddress, to, swapper, swapData);
     }
 
     function executeIntent(
         address tokenAddress,
-        address to
+        address to,
+        address swapper,
+        bytes memory swapData
     ) payable public {
         IERC20Upgradeable source = IERC20Upgradeable(sourceTokenAddress);
         uint256 amount = source.balanceOf(address(this));
@@ -49,7 +48,7 @@ contract IntentReceiver is IStargateReceiver {
         require(amount > 0, "Amount must be greater than 0");
 
         if (tokenAddress != sourceTokenAddress) {
-            amount = _swapTokensAndTransfer(sourceTokenAddress, tokenAddress, amount, to);
+            amount = _swapTokensAndTransfer(sourceTokenAddress, tokenAddress, amount, to, swapper, swapData);
         } else {
             source.safeTransfer(to, amount);
         }
@@ -61,30 +60,20 @@ contract IntentReceiver is IStargateReceiver {
         address fromToken,
         address toToken,
         uint256 amount,
-        address recipient
+        address recipient,
+        address swapper,
+        bytes memory swapData
     ) internal returns (uint256) {
-        address[] memory path = new address[](2);
-        path[0] = fromToken;
-        path[1] = toToken;
-
         IERC20Upgradeable fromAsset = IERC20Upgradeable(fromToken);
-        fromAsset.safeApprove(uniswapRouter, amount);
+        IERC20Upgradeable toAsset = IERC20Upgradeable(toToken);
+        
+        fromAsset.safeApprove(swapper, amount);
+        uint256 toAssetPreviousBalance = toAsset.balanceOf(address(this));
+        swapper.call(swapData); 
+        uint256 toAssetCurrentBalance = toAsset.balanceOf(address(this));
+        require(toAssetCurrentBalance - toAssetPreviousBalance > 0, "Swap failed");
 
-        IERC20Upgradeable asset = IERC20Upgradeable(toToken);
-        uint256 previousBalance = asset.balanceOf(recipient);
-        IUniswapRouterL2.ExactInputSingleParams memory params = IUniswapRouterL2.ExactInputSingleParams({
-            tokenIn: fromToken,
-            tokenOut: toToken,
-            fee: 3000,
-            recipient: recipient,
-            amountIn: amount,
-            amountOutMinimum: 1,
-            sqrtPriceLimitX96: 0
-        });
-        IUniswapRouterL2(uniswapRouter).exactInputSingle(params);
-        uint256 currentBalance = asset.balanceOf(recipient);
-        require(currentBalance - previousBalance > 0, "Swap failed");
-        return currentBalance - previousBalance;
+        toAsset.safeTransfer(recipient, toAssetCurrentBalance - toAssetPreviousBalance);
     }
 
     receive() external payable {}
